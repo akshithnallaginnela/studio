@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from 'next/navigation';
-import { Loader2, Info } from "lucide-react";
+import { Loader2, Info, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +27,7 @@ const formSchema = z.object({
     message: "Please enter a valid college email address.",
   }),
   password: z.string().min(1, {
-    message: "Roll number cannot be empty.",
+    message: "Password/Roll number cannot be empty.",
   }),
 });
 
@@ -51,20 +51,24 @@ export function LoginForm() {
     try {
       const studentData = await getStudentRecord(values.email, values.password);
 
-      // Store data temporarily for dashboard navigation.
       sessionStorage.setItem('studentData', JSON.stringify(studentData));
 
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${studentData.name || 'Student'}!`,
+        description: `Welcome back, ${studentData.name || 'User'}!`,
       });
-      router.push('/dashboard');
+      
+      if (studentData.role === 'admin') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (error) {
       console.error("Login failed:", error);
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "Invalid email or roll number. Please try again.",
+        description: "Invalid email or password. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -75,9 +79,12 @@ export function LoginForm() {
     <div className="w-full max-w-md space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">CampusConnect</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center flex items-center justify-center gap-2">
+            <ShieldCheck className="w-8 h-8 text-primary" />
+            CampusConnect
+          </CardTitle>
           <CardDescription className="text-center">
-            Enter your college email and roll number to access your portal.
+            Access your student or admin portal.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -101,9 +108,9 @@ export function LoginForm() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Roll Number (Password)</FormLabel>
+                    <FormLabel>Password / Roll Number</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Your Roll Number" {...field} />
+                      <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -121,10 +128,14 @@ export function LoginForm() {
         <Info className="h-4 w-4" />
         <AlertTitle className="text-xs font-semibold">Demo Credentials</AlertTitle>
         <AlertDescription className="text-xs space-y-1 mt-1">
-          <div>Email: <code className="bg-background px-1 rounded">student1@college.edu</code></div>
-          <div>Roll: <code className="bg-background px-1 rounded">roll123</code></div>
-          <div className="pt-1">Email: <code className="bg-background px-1 rounded">test@example.com</code></div>
-          <div>Roll: <code className="bg-background px-1 rounded">testpass</code></div>
+          <div className="flex justify-between border-b pb-1">
+            <span>Admin: <code className="bg-background px-1 rounded">admin@college.edu</code></span>
+            <span>Pass: <code className="bg-background px-1 rounded">admin123</code></span>
+          </div>
+          <div className="flex justify-between pt-1">
+            <span>Student: <code className="bg-background px-1 rounded">student1@college.edu</code></span>
+            <span>Roll: <code className="bg-background px-1 rounded">roll123</code></span>
+          </div>
         </AlertDescription>
       </Alert>
     </div>
